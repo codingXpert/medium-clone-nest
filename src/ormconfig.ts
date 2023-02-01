@@ -5,6 +5,10 @@ const config:  DataSourceOptions = {
   port: 5432,
   username: 'postgres',
   password: 'admin@123',
-  database: 'mediumClone'
+  database: 'mediumClone'  ,
+  entities: [__dirname + '/**/*.entity{.ts,.js}'],
+  synchronize: true,
+  logging: true,
+
 };
 export default config;
