@@ -1,10 +1,11 @@
-import { Controller } from "@nestjs/common";
+import { Controller, Get } from '@nestjs/common';
+import { TagService } from './tag.service';
 
 @Controller('/tag')
 export class TagController {
-
-display(){
-    return [1,2,3]
-}
-
+  constructor(private readonly tagService: TagService) {}
+  @Get()
+  display(): number[] {
+    return this.tagService.display();
+  }
 }
