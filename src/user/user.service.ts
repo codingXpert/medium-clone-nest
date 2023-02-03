@@ -5,7 +5,7 @@ import { CreateUserDto } from './dto/createUser.dto';
 import { UserEntity } from './entity/user.entity';
 import { sign } from 'jsonwebtoken';
 import { JWT_SECRET } from '@app/secretKey/config';
-import { UserResponseInterface } from '@app/types/userResponse.interface';
+import { UserResponseInterface } from '../types/userResponse.interface';
 import { loginUserDto } from './dto/loginUser.dto';
 import { compare } from 'bcrypt';
 
@@ -14,7 +14,7 @@ export class UserService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
-  ) {}
+  ) { }
   //create user
   async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
     const userByEmail = await this.userRepository.findOne({
@@ -61,7 +61,7 @@ export class UserService {
   async login(loginUserDto: loginUserDto): Promise<UserEntity> {
     const user = await this.userRepository.findOne({
       where: { email: loginUserDto.email },
-      select: ['id' , 'username' , 'email','bio' , 'image' , 'password'] //since we are not selecting the password from userEntity & that's why we are selecting all fields explicitly here
+      select: ['id', 'username', 'email', 'bio', 'image', 'password'] //since we are not selecting the password from userEntity & that's why we are selecting all fields explicitly here
     });
     if (!user) {
       throw new HttpException(
@@ -81,5 +81,12 @@ export class UserService {
     }
     delete user.password;    // deleting the password before sending the response to frontEnd
     return user;
+  }
+
+  // findById
+  async findById(decode) {
+    const id = decode.id;
+
+    return await this.userRepository.findOne({ where: { id } });
   }
 }
