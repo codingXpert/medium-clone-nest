@@ -25,13 +25,17 @@
     "db:migrate": "npm run typeorm migration:run"
   },
   "dependencies": {
+    "@nestjs/class-transformer": "^0.4.0",
     "@nestjs/common": "^9.0.0",
     "@nestjs/config": "^2.2.0",
     "@nestjs/core": "^9.0.0",
     "@nestjs/jwt": "^10.0.1",
     "@nestjs/platform-express": "^9.0.0",
     "@nestjs/typeorm": "^9.0.1",
+    "@nestjsi/class-validator": "^0.2.2",
     "bcrypt": "^5.1.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.0",
     "jsonwebtoken": "^9.0.0",
     "module-alias": "^2.2.2",
     "nodemon": "^2.0.20",
