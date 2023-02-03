@@ -18,7 +18,7 @@ export class UserEntity {
   @Column({ default: '' })
   image: string;
 
-  @Column()
+  @Column({select:false})   // false means we are not selecting the password & that's why we are selecting all fields explicitly in userService
   password: 'string';
 
   @BeforeInsert()

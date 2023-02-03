@@ -6,6 +6,8 @@ import { UserEntity } from './entity/user.entity';
 import { sign } from 'jsonwebtoken';
 import { JWT_SECRET } from '@app/secretKey/config';
 import { UserResponseInterface } from '@app/types/userResponse.interface';
+import { loginUserDto } from './dto/loginUser.dto';
+import { compare } from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -13,18 +15,18 @@ export class UserService {
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
   ) {}
+  //create user
   async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
-
     const userByEmail = await this.userRepository.findOne({
-      where:{email: createUserDto.email}
+      where: { email: createUserDto.email },
     });
     const userByUsername = await this.userRepository.findOne({
-      where:{username: createUserDto.username}
+      where: { username: createUserDto.username },
     });
-    if(userByEmail || userByEmail){
+    if (userByEmail || userByEmail) {
       throw new HttpException(
         'Email or Username are taken',
-        HttpStatus.UNPROCESSABLE_ENTITY
+        HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
     const newUser = new UserEntity();
@@ -33,14 +35,19 @@ export class UserService {
     return await this.userRepository.save(newUser);
   }
 
-  generateJwt(user: UserEntity):string{
-    return sign({
+  //generate token
+  generateJwt(user: UserEntity): string {
+    return sign(
+      {
         id: user.id,
         username: user.username,
-        email: user.email
-    }, JWT_SECRET)
+        email: user.email,
+      },
+      JWT_SECRET,
+    );
   }
 
+  // building user response
   buildUserResponse(user: UserEntity): UserResponseInterface {
     return {
       user: {
@@ -48,5 +55,31 @@ export class UserService {
         token: this.generateJwt(user),
       },
     };
+  }
+
+  //login
+  async login(loginUserDto: loginUserDto): Promise<UserEntity> {
+    const user = await this.userRepository.findOne({
+      where: { email: loginUserDto.email },
+      select: ['id' , 'username' , 'email','bio' , 'image' , 'password'] //since we are not selecting the password from userEntity & that's why we are selecting all fields explicitly here
+    });
+    if (!user) {
+      throw new HttpException(
+        'credentials are not valid',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+    const isPasswordCorrect = await compare(
+      loginUserDto.password,
+      user.password,
+    );
+    if (!isPasswordCorrect) {
+      throw new HttpException(
+        'credentials are not valid',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+    delete user.password;    // deleting the password before sending the response to frontEnd
+    return user;
   }
 }

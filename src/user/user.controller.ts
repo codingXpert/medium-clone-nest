@@ -12,4 +12,13 @@ constructor(private readonly userService: UserService){}
         const user =  await this.userService.createUser(createUserDto);
         return this.userService.buildUserResponse(user);
     }
+
+    @Post('user/login')
+    @UsePipes(new ValidationPipe())
+    async login(
+        @Body('user') loginDto: any
+        ):Promise<UserResponseInterface>{
+            const user = await this.userService.login(loginDto);
+            return this.userService.buildUserResponse(user)
+    }
 }
