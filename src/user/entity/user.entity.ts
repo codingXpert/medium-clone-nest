@@ -1,5 +1,6 @@
-import { BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BeforeInsert, Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { hash } from 'bcrypt';
+import { ArticleEntity } from '@app/article/entity/article.entity';
 
 @Entity({ name: 'users' })
 export class UserEntity {
@@ -25,4 +26,7 @@ export class UserEntity {
   async hashPassword() {
     this.password = await hash(this.password, 10); // here 10 is inserted as salt
   }
+
+  @OneToMany( () => ArticleEntity , (article) => article.author) // @OneToMany() takes two parameter , from first callback function we are returning our ArticleEntity , 
+  articles: ArticleEntity[];                                    // & second claaback function takes (article) as an argument and returning author of the article. 
 }
