@@ -1,11 +1,11 @@
 import { UserResponseInterface } from "../types/userResponse.interface";
-import { Body, Controller, Get, Post, Req, UseGuards, UsePipes, ValidationPipe } from "@nestjs/common";
+import { Body, Controller, Get, Post, Put, UseGuards, UsePipes, ValidationPipe } from "@nestjs/common";
 import { CreateUserDto } from "./dto/createUser.dto";
 import { UserService } from "./user.service";
-import { ExpressRequest } from "@app/types/expressRequest.interface";
 import { User } from "./decorators/user.decorator";
 import { UserEntity } from "./entity/user.entity";
 import { AuthGuard } from "./guard/auth.guard";
+import { UpdateUserDto } from "./dto/updateUser.dto";
 
 @Controller()
 export class UserController {
@@ -34,5 +34,14 @@ export class UserController {
 
         return this.userService.buildUserResponse(user)
 
+    }
+
+    // Update user
+    @Put('user')
+    @UseGuards(AuthGuard)
+    async updateCurretUser(@User('id') currentUserId: number , @Body('user') updateUserDto: UpdateUserDto
+    ): Promise<UserResponseInterface>{
+        const user = await this.userService.updateUser(currentUserId , updateUserDto);
+        return this.userService.buildUserResponse(user);
     }
 }

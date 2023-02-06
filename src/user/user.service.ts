@@ -8,6 +8,7 @@ import { JWT_SECRET } from '@app/secretKey/config';
 import { UserResponseInterface } from '../types/userResponse.interface';
 import { loginUserDto } from './dto/loginUser.dto';
 import { compare } from 'bcrypt';
+import { UpdateUserDto } from './dto/updateUser.dto';
 
 @Injectable()
 export class UserService {
@@ -33,6 +34,13 @@ export class UserService {
     Object.assign(newUser, createUserDto);
     console.log('newUser', newUser);
     return await this.userRepository.save(newUser);
+  }
+
+  // Update User
+  async updateUser(userId: number , updateUserDto: UpdateUserDto): Promise<UserEntity>{
+    const user = await this.findById(userId);
+    Object.assign(user , updateUserDto); // updating the user :- source is updateUserDto & target is user.
+    return await this.userRepository.save(user);
   }
 
   //generate token
