@@ -36,6 +36,6 @@ export class ArticleEntity {
         this.updatedAt = new Date();
     }
 
-    @ManyToOne(() => UserEntity , (user) => user.articles)
+    @ManyToOne(() => UserEntity , (user) => user.articles , {eager: true})  // eager: true , this option means we always load automatically author from the article
     author: UserEntity;
 }
