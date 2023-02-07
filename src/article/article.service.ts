@@ -35,4 +35,10 @@ export class ArticleService {
     private getSlug(title: string): string {
         return(slugify(title , {lower: true})) + '_' + ((Math.random()*Math.pow(36,6)|0).toString());
     }
+
+    // find article by slug
+    async findBySlug(slug: string):Promise<ArticleEntity>{
+        return await this.articleRepository.findOne({where: {slug}});
+
+    }
 }
