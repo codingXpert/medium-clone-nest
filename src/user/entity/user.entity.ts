@@ -1,4 +1,4 @@
-import { BeforeInsert, Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { BeforeInsert, Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { hash } from 'bcrypt';
 import { ArticleEntity } from '@app/article/entity/article.entity';
 
@@ -29,4 +29,8 @@ export class UserEntity {
 
   @OneToMany( () => ArticleEntity , (article) => article.author) // @OneToMany() takes two parameter , from first callback function we are returning our ArticleEntity , 
   articles: ArticleEntity[];                                    // & second claaback function takes (article) as an argument and returning author of the article. 
+
+  @ManyToMany(() => ArticleEntity)
+  @JoinTable()
+  favorites: ArticleEntity[];
 }
