@@ -9,6 +9,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -16,11 +17,22 @@ import {
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/createArticle.dto';
 import { ArticleResponseInterface } from './types/articleResponse.interface';
+import { ArticlesResponseInterface } from './types/articlesResponseInterface';
 
 @Controller('articles')
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
 
+  // find All using query builder
+  @Get()
+  async findAll(
+    @User('id') currentUserId: number,
+    @Query() query: any
+  ): Promise<ArticlesResponseInterface>{
+    return this.articleService.findAll(currentUserId , query)
+  }
+
+  //create article
   @Post()
   @UseGuards(AuthGuard) // if the user is logged in (must have a token) , then only allow him to create articles
   async create(
@@ -62,7 +74,11 @@ export class ArticleController {
     @Param('slug') slug: string,
     @Body('article') updateArticleDto: CreateArticleDto,
   ) {
-    const article = await this.articleService.updateArticle(slug , updateArticleDto , currentUserId);
+    const article = await this.articleService.updateArticle(
+      slug,
+      updateArticleDto,
+      currentUserId,
+    );
     return await this.articleService.buildArticleResponse(article);
   }
 }

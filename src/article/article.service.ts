@@ -1,18 +1,55 @@
 import { UserEntity } from '@app/user/entity/user.entity';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeleteResult, Repository } from 'typeorm';
+import { DataSource, DeleteResult, Repository } from 'typeorm';
 import { CreateArticleDto } from './dto/createArticle.dto';
 import { ArticleEntity } from './entity/article.entity';
 import { ArticleResponseInterface } from './types/articleResponse.interface';
 import slugify from 'slugify';
+import { ArticlesResponseInterface } from './types/articlesResponseInterface';
 
 @Injectable()
 export class ArticleService {
   constructor(
     @InjectRepository(ArticleEntity)
     private readonly articleRepository: Repository<ArticleEntity>,
+    private dataSource: DataSource,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>
   ) {}
+
+    // find all using query Builder(pagination)
+    async findAll(currentUserId: number , query:any): Promise<ArticlesResponseInterface>{
+        const queryBuilder = this.dataSource.getRepository(ArticleEntity)
+        .createQueryBuilder('articles')
+        .leftJoinAndSelect('articles.author' , 'author');  // joining author of the article . if you want only the articles not the author of that article , just commit this line
+
+        // searching or filtering by tagList
+        if(query.tag){
+          queryBuilder.andWhere('articles.tagList LIKE  :tag' , {   // in where() we can apply only a single condition , But in andWhere() we can apply multiple conditions 
+            tag :`%${query.tag}%`
+          })  
+        }
+
+        // searching or filtering articles related to an author
+        if(query.author){
+          const author = await this.userRepository.findOne({where:{username:query.author}});
+          queryBuilder.andWhere('articles.author = :id' , {
+            id: author.id
+          })
+        }
+        queryBuilder.orderBy('articles.createdAt' , 'DESC')
+        const articlesCount = await queryBuilder.getCount();
+        if(query.limit){
+            queryBuilder.limit(query.limit);
+        }
+        if(query.offset){
+            queryBuilder.offset = (query.offset);
+        }
+        const articles = await queryBuilder.getMany();
+        return {articles , articlesCount}
+
+    }
 
   // creating article
   async createArticle(
