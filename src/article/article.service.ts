@@ -38,6 +38,23 @@ export class ArticleService {
             id: author.id
           })
         }
+
+    if (query.favorited) {
+      const author = await this.userRepository.findOne({
+             where:{username:query.favorited},
+             relations: ['favorites']
+           },
+      );
+      const ids = author.favorites.map((el) => el.id);
+
+      if (ids.length > 0) {
+        queryBuilder.andWhere('articles.id IN (:...ids)', { ids });
+      } else {
+        queryBuilder.andWhere('1=0');
+      }
+    }
+
+
         queryBuilder.orderBy('articles.createdAt' , 'DESC')
         const articlesCount = await queryBuilder.getCount();
         if(query.limit){
@@ -46,9 +63,27 @@ export class ArticleService {
         if(query.offset){
             queryBuilder.offset = (query.offset);
         }
-        const articles = await queryBuilder.getMany();
-        return {articles , articlesCount}
 
+       
+        let favoriteIds: number[] = [];
+
+        if (currentUserId) {
+          const currentUser = await this.userRepository.findOne(
+            {where:{id:currentUserId}, 
+            relations: ['favorites'],
+          });
+          favoriteIds = currentUser.favorites.map((favorite) => favorite.id);
+          console.log(favoriteIds);
+          
+        }
+    
+        const articles = await queryBuilder.getMany();
+        const articlesWithFavorited = articles.map((article) => {
+          const favorited = favoriteIds.includes(article.id);
+          return { ...article, favorited };
+        });
+    
+        return { articles: articlesWithFavorited, articlesCount };
     }
 
   // creating article
@@ -139,5 +174,23 @@ export class ArticleService {
   }
 
   return article;
+}
+
+//disliking the liked article or removing article from favorites 
+async deleteArticlesFromFavorites(slug: string , userId:number): Promise<ArticleEntity>{
+  const article = await this.findBySlug(slug);
+  const user = await this.userRepository.findOne({where:{id: userId} , relations: ['favorites']});
+
+  const articleIndex =
+    user.favorites.findIndex(
+      (articleInFavorites) => articleInFavorites.id === article.id,  
+    );
+    if(articleIndex >= 0){
+      user.favorites.splice(articleIndex , 1);
+      article.favoritesCount--;
+      await this.userRepository.save(user);
+      await this.articleRepository.save(article);
+    }
+    return article;
 }
 }

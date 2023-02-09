@@ -83,13 +83,23 @@ export class ArticleController {
   }
 
 
-  //Add article to favorites 
+  //Liking or Add article to favorites 
   @Post(':slug/favorites')
   @UseGuards(AuthGuard)
   async addArticlesToFavorites(
     @User('id') currentUserId: number, 
     @Param('slug') slug: string): Promise<ArticleResponseInterface>{
       const article = await this.articleService.addArticleToFavorites(slug, currentUserId);
+      return this.articleService.buildArticleResponse(article); 
+    }
+
+    //disliking the liked article or removing article from favorites 
+  @Delete(':slug/favorites')
+  @UseGuards(AuthGuard)
+  async deleteArticlesFromFavorites(
+    @User('id') currentUserId: number, 
+    @Param('slug') slug: string): Promise<ArticleResponseInterface>{
+      const article = await this.articleService.deleteArticlesFromFavorites(slug, currentUserId);
       return this.articleService.buildArticleResponse(article); 
     }
 }
