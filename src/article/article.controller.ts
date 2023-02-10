@@ -32,6 +32,16 @@ export class ArticleController {
     return this.articleService.findAll(currentUserId , query)
   }
 
+  // current user feed(this feed is visiable to the current logged in user only when the other users we have followed creates a feed like facebook.)
+  @Get('feed')
+  @UseGuards(AuthGuard)
+  async getFeed(
+    @User('id') currentUserId: number , 
+    @Query() query: any
+    ):Promise<ArticlesResponseInterface>{
+      return await this.articleService.getFeed(currentUserId , query);
+    }
+
   //create article
   @Post()
   @UseGuards(AuthGuard) // if the user is logged in (must have a token) , then only allow him to create articles

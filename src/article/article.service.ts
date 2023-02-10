@@ -7,6 +7,7 @@ import { ArticleEntity } from './entity/article.entity';
 import { ArticleResponseInterface } from './types/articleResponse.interface';
 import slugify from 'slugify';
 import { ArticlesResponseInterface } from './types/articlesResponseInterface';
+import { FollowEntity } from '@app/profile/following.entity';
 
 @Injectable()
 export class ArticleService {
@@ -15,7 +16,9 @@ export class ArticleService {
     private readonly articleRepository: Repository<ArticleEntity>,
     private dataSource: DataSource,
     @InjectRepository(UserEntity)
-    private readonly userRepository: Repository<UserEntity>
+    private readonly userRepository: Repository<UserEntity>,
+    @InjectRepository(FollowEntity)
+    private readonly followRepository: Repository<FollowEntity>
   ) {}
 
     // find all using query Builder(pagination)
@@ -99,6 +102,34 @@ export class ArticleService {
     article.slug = this.getSlug(createArticleDto.title);
     article.author = currentUser;
     return await this.articleRepository.save(article);
+  }
+
+  // get Feed of current logged-in user
+  async getFeed(currentUserId: number , query: any):Promise<ArticlesResponseInterface>{
+    const follows = await this.followRepository.find({where:{followerId:currentUserId}});  
+    if(follows.length === 0){
+        return  {articles: [] , articlesCount:0};
+    }
+    const followingUserIds = follows.map((follow) => follow.followingId);  // all ids of the  users  that our current user is following
+    const queryBuilder = this.dataSource.getRepository(ArticleEntity).createQueryBuilder('articles')
+    .leftJoin('articles.author' ,  'auther')
+    .where('articles.authorId IN(:...ids)' , {ids: followingUserIds});
+
+    queryBuilder.orderBy('articles.createdAt' , 'DESC');  
+
+    const articlesCount = await queryBuilder.getCount();
+
+    if(query.limit){
+      queryBuilder.limit(query.limit);
+    }
+
+    if(query.offset){
+      queryBuilder.offset(query.offset);
+    }
+
+    const articles = await queryBuilder.getMany();
+
+    return { articles , articlesCount };
   }
 
   //Article response
