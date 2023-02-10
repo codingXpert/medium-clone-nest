@@ -15,6 +15,7 @@ export class ProfileService {
     private readonly followRepository: Repository<FollowEntity>
   ) {}
 
+  //get profile
   async getProfile(
     currentUserId: number,
     profileUsername: string,
@@ -24,8 +25,8 @@ export class ProfileService {
     if (!user) {
       throw new HttpException('Profile does not exist', HttpStatus.NOT_FOUND);
     }
-
-    return { ...user, following: false };     // returning the whole user + one additional field i.e; user
+    const follow = await this.followRepository.findOne({where:{followerId:currentUserId, followingId: user.id}})
+    return { ...user, following: Boolean(follow) };     // returning the whole user + one additional field i.e; following
   }
 
   //building profile response
@@ -57,14 +58,38 @@ async followProfile(
       followingId: user.id,
   }});
 
-    if (!follow) {
+    if (!follow) {   // we are saving the currentId & user.id inside follow
       const followToCreate = new FollowEntity();
       followToCreate.followerId = currentUserId;    // assigning the values of currentUserId & user.id in followerId & followingId
       followToCreate.followingId = user.id;
-      await this.followRepository.save(followToCreate);
+      await this.followRepository.save(followToCreate);      //saving to DB
     }
 
     return { ...user, following: true };
+  }
+
+  //unfollow an user/profile
+  async unfollowProfile(
+    currentUserId: number,
+    profileUsername: string,
+  ): Promise<ProfileType> {
+    const user = await this.userRepository.findOne({where:{ username: profileUsername}});
+
+    if (!user) {
+      throw new HttpException('Profile does not exist', HttpStatus.NOT_FOUND);
+    }
+
+    if (currentUserId === user.id) {
+      throw new HttpException(
+        'Follower and Following ids cant be equal',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+     await this.followRepository.delete({     //deleting from DB
+        followerId: currentUserId,
+        followingId: user.id
+     });
+    return { ...user, following: false };
   }
 
 }
