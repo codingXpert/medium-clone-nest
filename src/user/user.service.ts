@@ -18,17 +18,24 @@ export class UserService {
   ) { }
   //create user
   async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
+    const errorResponse = {      // modifying error response . we need to do like this , because  it is needed to send error to front end in a proper manner
+        errors: {}
+    }
     const userByEmail = await this.userRepository.findOne({
       where: { email: createUserDto.email },
     });
     const userByUsername = await this.userRepository.findOne({
       where: { username: createUserDto.username },
     });
-    if (userByEmail || userByEmail) {
-      throw new HttpException(
-        'Email or Username are taken',
-        HttpStatus.UNPROCESSABLE_ENTITY,
-      );
+    if(userByEmail){
+      errorResponse.errors['email'] = 'has already been taken'    // custom error , this will displayed in postman as : "email": "has already been taken"
+    }
+
+    if(userByUsername){
+      errorResponse.errors['username'] = 'has already been taken'
+    }
+    if (userByEmail || userByUsername) {
+      throw new HttpException(errorResponse,HttpStatus.UNPROCESSABLE_ENTITY);
     }
     const newUser = new UserEntity();
     Object.assign(newUser, createUserDto);
@@ -67,25 +74,22 @@ export class UserService {
 
   //login
   async login(loginUserDto: loginUserDto): Promise<UserEntity> {
+    const errorResponse = {
+      errors:{'email or password':'is invalid'}    // custom error
+    }
     const user = await this.userRepository.findOne({
       where: { email: loginUserDto.email },
       select: ['id', 'username', 'email', 'bio', 'image', 'password'] //since we are not selecting the password from userEntity & that's why we are selecting all fields explicitly here
     });
     if (!user) {
-      throw new HttpException(
-        'credentials are not valid',
-        HttpStatus.UNPROCESSABLE_ENTITY,
-      );
+      throw new HttpException(errorResponse,HttpStatus.UNPROCESSABLE_ENTITY);    // throwing custom error
     }
     const isPasswordCorrect = await compare(
       loginUserDto.password,
       user.password,
     );
     if (!isPasswordCorrect) {
-      throw new HttpException(
-        'credentials are not valid',
-        HttpStatus.UNPROCESSABLE_ENTITY,
-      );
+      throw new HttpException(errorResponse,HttpStatus.UNPROCESSABLE_ENTITY);
     }
     delete user.password;    // deleting the password before sending the response to frontEnd
     return user;
