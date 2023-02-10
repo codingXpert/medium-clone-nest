@@ -1,3 +1,4 @@
+import { BackendValidationPipe } from '@app/shared/pipes/backendValidation.pipe';
 import { User } from '@app/user/decorators/user.decorator';
 import { UserEntity } from '@app/user/entity/user.entity';
 import { AuthGuard } from '@app/user/guard/auth.guard';
@@ -45,6 +46,7 @@ export class ArticleController {
   //create article
   @Post()
   @UseGuards(AuthGuard) // if the user is logged in (must have a token) , then only allow him to create articles
+  @UsePipes(new BackendValidationPipe())
   async create(
     @User() currentUser: UserEntity,
     @Body('article') createArticleDto: CreateArticleDto,

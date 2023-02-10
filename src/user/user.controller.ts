@@ -6,19 +6,22 @@ import { User } from "./decorators/user.decorator";
 import { UserEntity } from "./entity/user.entity";
 import { AuthGuard } from "./guard/auth.guard";
 import { UpdateUserDto } from "./dto/updateUser.dto";
+import { BackendValidationPipe } from "@app/shared/pipes/backendValidation.pipe";
 
 @Controller()
 export class UserController {
     constructor(private readonly userService: UserService) { }
+
+    //create user
     @Post('users')
-    @UsePipes(new ValidationPipe())
+    @UsePipes(new BackendValidationPipe())
     async createUser(@Body('user') createUserDto: CreateUserDto): Promise<UserResponseInterface> {
         const user = await this.userService.createUser(createUserDto);
         return this.userService.buildUserResponse(user);
     }
 
     @Post('user/login')
-    @UsePipes(new ValidationPipe())
+    @UsePipes(new BackendValidationPipe())
     async login(
         @Body('user') loginDto: any
     ): Promise<UserResponseInterface> {
